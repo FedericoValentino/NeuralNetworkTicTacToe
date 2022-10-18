@@ -1,10 +1,11 @@
 #include <cstdio>
 #include <vector>
 #include <iterator>
+#include <algorithm>
 #include "TicTacToe/TicTacToe.h"
 #include "BrainLib/BrainFart.h"
 
-#define GENERATIONS 200
+#define GENERATIONS 5
 
 #define TESTINDIVIDUALS 100
 
@@ -25,7 +26,7 @@ bool comp(Individual* i1, Individual* i2)
 int max(const float* array, int size)
 {
     float max = 0;
-    int returnValue;
+    int returnValue = 0;
     for(int i = 0; i < size; i++)
     {
         if(array[i] > max)
@@ -34,6 +35,8 @@ int max(const float* array, int size)
             returnValue = i;
         }
     }
+
+    delete array;
     return returnValue;
 }
 
@@ -57,10 +60,11 @@ void startGame(Individual* currentSubject, Individual* currentFoe)
         {
             guess = max(currentFoe->CPU->feedForward(input), 9);
         }
+        printf("move is %d\n", guess);
         currentGame->move(guess);
         currentGame->displayBoard();
     }
-    free(currentGame);
+    delete currentGame;
 }
 
 int main()
@@ -108,7 +112,7 @@ int main()
                 }
 
                 currentSubject->fitness += currentGame->getP1Reward();
-                free(currentGame);
+                delete currentGame;
             }
             //printf("Subject: %d\tFitness:%d\n", i+1, currentSubject->fitness);
         }
@@ -126,8 +130,8 @@ int main()
         for(int i = 2; i < TESTINDIVIDUALS; i++)
         {
             testSubjects[i]->CPU->freeBrain();
-            free(testSubjects[i]->CPU);
-            free(testSubjects[i]);
+            delete testSubjects[i]->CPU;
+            delete testSubjects[i];
         }
 
         testSubjects.clear();
@@ -143,6 +147,13 @@ int main()
 
         testSubjects.push_back(father);
         testSubjects.push_back(mother);
+    }
+
+    for(int i = 0; i < TESTINDIVIDUALS; i++)
+    {
+        testSubjects[i]->CPU->freeBrain();
+        delete testSubjects[i]->CPU;
+        delete testSubjects[i];
     }
 
 }

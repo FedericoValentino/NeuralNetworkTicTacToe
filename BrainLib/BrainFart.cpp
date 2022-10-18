@@ -96,7 +96,22 @@ float *BrainFart::feedForward(std::vector<float> input)
     print(layers[dimensions.size()-1], 1, dimensions[dimensions.size()-1]);
      */
 
-    return layers[dimensions.size()-1][0];
+    float* returnValue = new float[dimensions[dimensions.size()-1]];
+
+    for(int i = 0; i < dimensions[dimensions.size()-1]; i++)
+    {
+        returnValue[i] = layers[dimensions.size()-1][0][i];
+    }
+
+    for(int i = 0; i < dimensions.size(); i++)
+    {
+        delete layers[i][0];
+        delete layers[i];
+    }
+
+
+
+    return returnValue;
 }
 
 
@@ -163,22 +178,17 @@ BrainFart *BrainFart::reproduce(BrainFart *father, BrainFart *mother) {
 
 void BrainFart::freeBrain()
 {
-    for(int i = 0; i < dimensions.size(); i++)
-    {
-        free(layers[i][0]);
-        free(layers[i]);
-    }
-    free(layers);
+    delete layers;
 
     for(int i = 0; i < dimensions.size()-1; i++)
     {
         for(int j = 0; j < dimensions[i]; j++)
         {
-            free(weights[i][j]);
+            delete weights[i][j];
         }
-        free(weights[i]);
+        delete weights[i];
     }
-    free(weights);
+    delete weights;
 }
 
 
