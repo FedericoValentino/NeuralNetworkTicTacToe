@@ -17,9 +17,12 @@ public:
 
     static BrainFart* reproduce(BrainFart* father, BrainFart* mother);
 
+    static BrainFart* cloneBrain(BrainFart* copy);
 
 private:
     float reLU(float x);
+
+    float sig(float x);
 
     std::vector<int> dimensions;
 

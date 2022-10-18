@@ -58,13 +58,13 @@ void TicTacToe::move(int pos)
         movesLeft = 0;
         if(turn)
         {
-            P1Reward = -10;
+            P1Reward = -20;
             P2Reward = 0;
         }
         else
         {
             P1Reward = 0;
-            P2Reward = -10;
+            P2Reward = -20;
         }
         return;
     }
@@ -85,8 +85,8 @@ bool TicTacToe::isGameDone() {
     {
         if(!illegalMove)
         {
-            P1Reward = 1;
-            P2Reward = 1;
+            P1Reward = 5;
+            P2Reward = 5;
         }
         return true;
     }

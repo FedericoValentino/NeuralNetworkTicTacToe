@@ -13,6 +13,10 @@ float BrainFart::reLU(float x) {
     return 0;
 }
 
+float BrainFart::sig(float x) {
+    return 1/(1 + std::exp(-x));
+}
+
 BrainFart::BrainFart(std::vector<int> layerSizes)
 {
     dimensions = layerSizes;
@@ -79,15 +83,27 @@ float *BrainFart::feedForward(std::vector<float> input)
     {
         layers[i] = multiply(1, dimensions[i-1], dimensions[i-1], dimensions[i], layers[i-1], weights[i-1]);
 
+        /*
         float sum = 0;
         for(int j = 0; j < dimensions[i]; j++)
         {
             sum += layers[i][0][j];
         }
+        */
 
-        for(int j = 0; j < dimensions[i]; j++)
+        if(i != dimensions.size()-1)
         {
-            layers[i][0][j] = reLU(layers[i][0][j]) / sum;
+            for(int j = 0; j < dimensions[i]; j++)
+            {
+                layers[i][0][j] = reLU(layers[i][0][j]);
+            }
+        }
+        else
+        {
+            for(int j = 0; j < dimensions[i]; j++)
+            {
+                layers[i][0][j] = sig(layers[i][0][j]);
+            }
         }
     }
 
@@ -108,8 +124,6 @@ float *BrainFart::feedForward(std::vector<float> input)
         delete layers[i][0];
         delete layers[i];
     }
-
-
 
     return returnValue;
 }
@@ -190,5 +204,27 @@ void BrainFart::freeBrain()
     }
     delete weights;
 }
+
+BrainFart *BrainFart::cloneBrain(BrainFart *copy) {
+    BrainFart* son = new BrainFart(copy->dimensions);
+
+
+    for(int i = 0; i < copy->dimensions.size()-1; i++)
+    {
+        float** fatherMatrix = copy->weights[i];
+        float** sonMatrix = son->weights[i];
+
+        for(int j = 0; j < copy->dimensions[i]; j++)
+        {
+            for(int k = 0; k < copy->dimensions[i+1]; k++)
+            {
+                sonMatrix[j][k] = fatherMatrix[j][k];
+            }
+        }
+    }
+    return son;
+}
+
+
 
 
