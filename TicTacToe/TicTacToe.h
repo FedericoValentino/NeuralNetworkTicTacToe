@@ -8,6 +8,7 @@ public:
     bool getTurn();
     int getGameStatus();
     int getP1Reward();
+    bool isMoveAvailable(int pos);
 
 private:
     int board[9];

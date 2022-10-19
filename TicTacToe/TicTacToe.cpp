@@ -173,3 +173,7 @@ int TicTacToe::getGameStatus() {
 int TicTacToe::getP1Reward() {
     return P1Reward;
 }
+
+bool TicTacToe::isMoveAvailable(int pos) {
+    return board[pos] == 0;
+}

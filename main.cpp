@@ -5,7 +5,7 @@
 #include "TicTacToe/TicTacToe.h"
 #include "BrainLib/BrainFart.h"
 
-#define GENERATIONS 200
+#define GENERATIONS 100
 
 #define TESTINDIVIDUALS 100
 
@@ -23,7 +23,7 @@ bool comp(Individual* i1, Individual* i2)
     return i1->fitness > i2->fitness;
 }
 
-int max(const float* array, int size)
+int max(const float* array, int size, TicTacToe* game)
 {
     float max = 0;
     int returnValue = 0;
@@ -31,8 +31,11 @@ int max(const float* array, int size)
     {
         if(array[i] > max)
         {
-            max = array[i];
-            returnValue = i;
+            if(game->isMoveAvailable(i))
+            {
+                max = array[i];
+                returnValue = i;
+            }
         }
     }
 
@@ -46,8 +49,6 @@ void playGame(Individual* BestPlayer)
 
     while(!currentGame->isGameDone())
     {
-        currentGame->displayBoard();
-
         std::vector<float> input;
         for(int k = 0; k < 9; k++)
         {
@@ -55,17 +56,20 @@ void playGame(Individual* BestPlayer)
         }
         int networkGuess;
 
-        networkGuess = max(BestPlayer->CPU->feedForward(input), 9);
+        networkGuess = max(BestPlayer->CPU->feedForward(input), 9, currentGame);
 
         printf("Machine move is %d\n", networkGuess);
         currentGame->move(networkGuess);
 
+        currentGame->displayBoard();
 
         printf("Play your move\n");
         int playerMove = 0;
         scanf("%d", &playerMove);
 
         currentGame->move(playerMove);
+
+        currentGame->displayBoard();
 
     }
     delete currentGame;
@@ -85,11 +89,11 @@ void startGame(Individual* currentSubject, Individual* currentFoe)
         int guess;
         if(currentGame->getTurn())
         {
-            guess = max(currentSubject->CPU->feedForward(input), 9);
+            guess = max(currentSubject->CPU->feedForward(input), 9, currentGame);
         }
         else
         {
-            guess = max(currentFoe->CPU->feedForward(input), 9);
+            guess = max(currentFoe->CPU->feedForward(input), 9, currentGame);
         }
         printf("move is %d\n", guess);
         currentGame->move(guess);
@@ -100,6 +104,8 @@ void startGame(Individual* currentSubject, Individual* currentFoe)
 
 int main()
 {
+
+    printf("TicTacToe\n");
     std::vector<Individual*> testSubjects;
 
     for(int i = 0; i < TESTINDIVIDUALS; i++)
@@ -110,34 +116,34 @@ int main()
         testSubjects.push_back(subject);
     }
 
-
-    for(int i = 0; i < GENERATIONS; i++)
+    printf("Training...\n");
+    for(int generation = 0; generation < GENERATIONS; generation++)
     {
-        for(int i = 0; i < TESTINDIVIDUALS; i++)
+        for(int j = 0; j < TESTINDIVIDUALS; j++)
         {
-            Individual* currentSubject = testSubjects[i];
+            Individual* currentSubject = testSubjects[j];
             currentSubject->fitness = 0;
-            for(int j = 0; j < TESTINDIVIDUALS; j++)
+            for(int foe = 0; foe < TESTINDIVIDUALS; foe++)
             {
-                Individual* currentFoe = testSubjects[j];
+                Individual* currentFoe = testSubjects[foe];
 
                 TicTacToe* currentGame = new TicTacToe();
 
                 while(!currentGame->isGameDone())
                 {
                     std::vector<float> input;
-                    for(int k = 0; k < 9; k++)
+                    for(int l = 0; l < 9; l++)
                     {
-                        input.push_back((float)currentGame->getBoard()[k]);
+                        input.push_back((float)currentGame->getBoard()[l]);
                     }
                     int guess;
                     if(currentGame->getTurn())
                     {
-                        guess = max(currentSubject->CPU->feedForward(input), 9);
+                        guess = max(currentSubject->CPU->feedForward(input), 9, currentGame);
                     }
                     else
                     {
-                        guess = max(currentFoe->CPU->feedForward(input), 9);
+                        guess = max(currentFoe->CPU->feedForward(input), 9, currentGame);
                     }
                     currentGame->move(guess);
                 }
@@ -145,20 +151,35 @@ int main()
                 currentSubject->fitness += currentGame->getP1Reward();
                 delete currentGame;
             }
-            //printf("Subject: %d\tFitness:%d\n", i+1, currentSubject->fitness);
         }
 
         std::sort(testSubjects.begin(), testSubjects.end(), comp);
 
-        printf("The best 2 were:\n fitness: %d, fitness: %d\n", testSubjects[0]->fitness, testSubjects[1]->fitness);
+        printf("The best individual had fitness: %d\n", testSubjects[0]->fitness);
 
         Individual* father = testSubjects[0];
-        Individual* mother = testSubjects[1];
 
 
-        startGame(father, mother);
+        startGame(father, father);
 
-        for(int k = 2; k < TESTINDIVIDUALS; k++)
+
+        std::vector<Individual*> newGeneration;
+        newGeneration.clear();
+
+        for(int session = 0; session < 10; session++)
+        {
+            for(int partner = 1; partner <= 10; partner++)
+            {
+                Individual* son = new Individual;
+                son->CPU = BrainFart::reproduce(father->CPU, testSubjects[partner]->CPU);
+                //son->CPU = BrainFart::cloneBrain(father->CPU);
+                son->fitness = 0;
+                son->CPU->mutate();
+                newGeneration.push_back(son);
+            }
+        }
+
+        for(int k = 0; k < TESTINDIVIDUALS; k++)
         {
             testSubjects[k]->CPU->freeBrain();
             delete testSubjects[k]->CPU;
@@ -167,21 +188,14 @@ int main()
 
         testSubjects.clear();
 
-        for(int child = 0; child < 98; child++)
-        {
-            Individual* son = new Individual;
-            son->CPU = BrainFart::reproduce(father->CPU, mother->CPU);
-            //son->CPU = BrainFart::cloneBrain(father->CPU);
-            son->fitness = 0;
-            son->CPU->mutate();
-            testSubjects.push_back(son);
-        }
+        testSubjects = newGeneration;
 
-        testSubjects.push_back(father);
-        testSubjects.push_back(mother);
     }
 
-    playGame(testSubjects[98]);
+
+    printf("Ready to play!\n");
+
+    playGame(testSubjects[0]);
 
 
     for(int i = 0; i < TESTINDIVIDUALS; i++)
