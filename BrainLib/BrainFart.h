@@ -15,6 +15,8 @@ public:
 
     void freeBrain();
 
+    void freeLayers();
+
     static BrainFart* reproduce(BrainFart* father, BrainFart* mother);
 
     static BrainFart* cloneBrain(BrainFart* copy);

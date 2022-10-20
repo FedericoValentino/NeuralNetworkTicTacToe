@@ -43,6 +43,27 @@ int max(const float* array, int size, TicTacToe* game)
     return returnValue;
 }
 
+void testTicTacToe()
+{
+    TicTacToe* currentGame = new TicTacToe();
+
+    currentGame->displayBoard();
+
+    while(!currentGame->isGameDone())
+    {
+
+        printf("Play your move\n");
+        int playerMove = 0;
+        scanf("%d", &playerMove);
+
+        currentGame->move(playerMove);
+
+        currentGame->displayBoard();
+    }
+    delete currentGame;
+}
+
+
 void playGame(Individual* BestPlayer)
 {
     TicTacToe* currentGame = new TicTacToe();
@@ -104,6 +125,7 @@ void startGame(Individual* currentSubject, Individual* currentFoe)
 
 int main()
 {
+    testTicTacToe();
 
     printf("TicTacToe\n");
     std::vector<Individual*> testSubjects;

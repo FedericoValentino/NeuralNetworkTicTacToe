@@ -81,7 +81,7 @@ float *BrainFart::feedForward(std::vector<float> input)
 
     for(int i = 1; i < dimensions.size(); i++)
     {
-        layers[i] = multiply(1, dimensions[i-1], dimensions[i-1], dimensions[i], layers[i-1], weights[i-1]);
+        layers[i] = MatrixMath::multiply(1, dimensions[i-1], dimensions[i-1], dimensions[i], layers[i-1], weights[i-1]);
 
         /*
         float sum = 0;
@@ -119,18 +119,23 @@ float *BrainFart::feedForward(std::vector<float> input)
         returnValue[i] = layers[dimensions.size()-1][0][i];
     }
 
+
+    return returnValue;
+}
+
+void BrainFart::freeLayers()
+{
     for(int i = 0; i < dimensions.size(); i++)
     {
         delete layers[i][0];
         delete layers[i];
     }
-
-    return returnValue;
 }
 
+void BrainFart::backwardPropagation(std::vector<float> input)
+{
+    float** inputMatrix = MatrixMath::toMatrix(1, input.size(), input);
 
-
-void BrainFart::backwardPropagation(std::vector<float> input) {
 
 }
 
@@ -155,7 +160,6 @@ void BrainFart::mutate()
             }
         }
     }
-
 }
 
 BrainFart *BrainFart::reproduce(BrainFart *father, BrainFart *mother) {

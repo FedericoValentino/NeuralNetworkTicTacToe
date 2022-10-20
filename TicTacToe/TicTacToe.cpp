@@ -58,15 +58,28 @@ void TicTacToe::move(int pos)
         movesLeft = 0;
         if(turn)
         {
-            P1Reward = -20;
-            P2Reward = 0;
+            P1Reward += -20;
+            P2Reward += 0;
         }
         else
         {
-            P1Reward = 0;
-            P2Reward = -20;
+            P1Reward += 0;
+            P2Reward += -20;
         }
         return;
+    }
+    if(isBlockingWin(pos))
+    {
+        if(turn)
+        {
+            P1Reward += 20;
+            P2Reward += 0;
+        }
+        else
+        {
+            P1Reward += 0;
+            P2Reward += 20;
+        }
     }
     if(turn)
     {
@@ -106,13 +119,13 @@ bool TicTacToe::isGameDone() {
 
                 if(gameDone == 1)
                 {
-                    P1Reward = 10;
-                    P2Reward = -10;
+                    P1Reward += 10;
+                    P2Reward += -10;
                 }
                 else
                 {
-                    P1Reward = -10;
-                    P2Reward = 10;
+                    P1Reward += -10;
+                    P2Reward += 10;
                 }
                 return true;
             }
@@ -131,13 +144,13 @@ bool TicTacToe::isGameDone() {
 
                 if(gameDone == 1)
                 {
-                    P1Reward = 10;
-                    P2Reward = -10;
+                    P1Reward += 10;
+                    P2Reward += -10;
                 }
                 else
                 {
-                    P1Reward = -10;
-                    P2Reward = 10;
+                    P1Reward += -10;
+                    P2Reward += 10;
                 }
                 return true;
             }
@@ -148,13 +161,13 @@ bool TicTacToe::isGameDone() {
 
             if(gameDone == 1)
             {
-                P1Reward = 10;
-                P2Reward = -10;
+                P1Reward += 10;
+                P2Reward += -10;
             }
             else
             {
-                P1Reward = -10;
-                P2Reward = 10;
+                P1Reward += -10;
+                P2Reward += 10;
             }
             return true;
         }
@@ -176,4 +189,98 @@ int TicTacToe::getP1Reward() {
 
 bool TicTacToe::isMoveAvailable(int pos) {
     return board[pos] == 0;
+}
+
+bool TicTacToe::isGameDone(int *boardCustom) {
+    int total;
+    for(int row = 0; row < 3; row ++)
+    {
+        total = 0;
+        for(int cell = 0; cell < 3; cell++)
+        {
+            total += boardCustom[row * 3 + cell];
+        }
+        if(total == 3 || total == -3)
+        {
+            gameDone = (total / 3);
+
+            if(gameDone == 1)
+            {
+                P1Reward += 10;
+                P2Reward += -10;
+            }
+            else
+            {
+                P1Reward += -10;
+                P2Reward += 10;
+            }
+            return true;
+        }
+    }
+
+    for(int column = 0; column < 3; column ++)
+    {
+        total = 0;
+        for(int cell = 0; cell < 3; cell++)
+        {
+            total += boardCustom[cell*3 + column];
+        }
+        if(total == 3 || total == -3)
+        {
+            gameDone = (total / 3);
+
+            if(gameDone == 1)
+            {
+                P1Reward += 10;
+                P2Reward += -10;
+            }
+            else
+            {
+                P1Reward += -10;
+                P2Reward += 10;
+            }
+            return true;
+        }
+    }
+    if(((boardCustom[0] == boardCustom[4] && boardCustom[4] == boardCustom[8]) || (boardCustom[2] == boardCustom[4] && boardCustom[4] == boardCustom[6])) && boardCustom[4] != 0)
+    {
+        gameDone = (boardCustom[4]);
+
+        if(gameDone == 1)
+        {
+            P1Reward += 10;
+            P2Reward += -10;
+        }
+        else
+        {
+            P1Reward += -10;
+            P2Reward += 10;
+        }
+        return true;
+    }
+
+    return false;
+
+}
+
+bool TicTacToe::isBlockingWin(int pos) {
+    int * boardCustom = new int[9];
+    for(int i = 0; i < 9; i++)
+    {
+        boardCustom[i] = board[i];
+    }
+
+    if(turn)
+    {
+        boardCustom[pos] = -1;
+    }
+    else
+    {
+        boardCustom[pos] = 1;
+    }
+    bool returnVal = isGameDone(boardCustom);
+
+    delete[] boardCustom;
+
+    return returnVal;
 }
