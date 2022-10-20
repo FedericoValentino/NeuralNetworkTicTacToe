@@ -5,7 +5,7 @@
 #include "TicTacToe/TicTacToe.h"
 #include "BrainLib/BrainFart.h"
 
-#define GENERATIONS 100
+#define GENERATIONS 500
 
 #define TESTINDIVIDUALS 100
 
@@ -70,29 +70,32 @@ void playGame(Individual* BestPlayer)
 
     while(!currentGame->isGameDone())
     {
-        std::vector<float> input;
-        for(int k = 0; k < 9; k++)
+        currentGame->displayBoard();
+        if(currentGame->getTurn())
         {
-            input.push_back((float)currentGame->getBoard()[k]);
+            std::vector<float> input;
+            for(int k = 0; k < 9; k++)
+            {
+                input.push_back((float)currentGame->getBoard()[k]);
+            }
+            int networkGuess;
+
+            networkGuess = max(BestPlayer->CPU->feedForward(input), 9, currentGame);
+
+            printf("Machine move is %d\n", networkGuess);
+            currentGame->move(networkGuess);
         }
-        int networkGuess;
+        else
+        {
+            printf("Play your move\n");
+            int playerMove = 0;
+            scanf("%d", &playerMove);
 
-        networkGuess = max(BestPlayer->CPU->feedForward(input), 9, currentGame);
-
-        printf("Machine move is %d\n", networkGuess);
-        currentGame->move(networkGuess);
-
-        currentGame->displayBoard();
-
-        printf("Play your move\n");
-        int playerMove = 0;
-        scanf("%d", &playerMove);
-
-        currentGame->move(playerMove);
-
-        currentGame->displayBoard();
-
+            currentGame->move(playerMove);
+        }
     }
+    printf("Winner is %c", currentGame->getWinner());
+
     delete currentGame;
 }
 
@@ -116,7 +119,7 @@ void startGame(Individual* currentSubject, Individual* currentFoe)
         {
             guess = max(currentFoe->CPU->feedForward(input), 9, currentGame);
         }
-        printf("move is %d\n", guess);
+        //printf("move is %d\n", guess);
         currentGame->move(guess);
         currentGame->displayBoard();
     }
@@ -125,7 +128,7 @@ void startGame(Individual* currentSubject, Individual* currentFoe)
 
 int main()
 {
-    testTicTacToe();
+    //testTicTacToe();
 
     printf("TicTacToe\n");
     std::vector<Individual*> testSubjects;
@@ -171,34 +174,33 @@ int main()
                 }
 
                 currentSubject->fitness += currentGame->getP1Reward();
+                //printf("Fitness gain is %d\n", currentGame->getP1Reward());
                 delete currentGame;
             }
         }
 
         std::sort(testSubjects.begin(), testSubjects.end(), comp);
 
-        printf("The best individual had fitness: %d\n", testSubjects[0]->fitness);
+        printf("The best individual in generation %d had fitness: %d\n", generation, testSubjects[0]->fitness);
 
         Individual* father = testSubjects[0];
+        Individual* mother = testSubjects[1];
 
 
-        startGame(father, father);
+        //startGame(father, mother);
 
 
         std::vector<Individual*> newGeneration;
         newGeneration.clear();
 
-        for(int session = 0; session < 10; session++)
+        for(int session = 0; session < TESTINDIVIDUALS; session++)
         {
-            for(int partner = 1; partner <= 10; partner++)
-            {
-                Individual* son = new Individual;
-                son->CPU = BrainFart::reproduce(father->CPU, testSubjects[partner]->CPU);
-                //son->CPU = BrainFart::cloneBrain(father->CPU);
-                son->fitness = 0;
-                son->CPU->mutate();
-                newGeneration.push_back(son);
-            }
+            Individual* son = new Individual;
+            son->CPU = BrainFart::reproduce(father->CPU, mother->CPU);
+            //son->CPU = BrainFart::cloneBrain(father->CPU);
+            son->fitness = 0;
+            son->CPU->mutate();
+            newGeneration.push_back(son);
         }
 
         for(int k = 0; k < TESTINDIVIDUALS; k++)
@@ -217,7 +219,15 @@ int main()
 
     printf("Ready to play!\n");
 
-    playGame(testSubjects[0]);
+    int answer = 0;
+    do
+    {
+        playGame(testSubjects[0]);
+
+        printf("Wanna play again?\n");
+        scanf("%d", &answer);
+    }while(answer > 0);
+
 
 
     for(int i = 0; i < TESTINDIVIDUALS; i++)

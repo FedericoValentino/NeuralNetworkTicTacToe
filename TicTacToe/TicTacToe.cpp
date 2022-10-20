@@ -2,6 +2,12 @@
 #include <cstdlib>
 #include <cstdio>
 
+
+#define WINNINGREWARD 10
+#define DRAWREWARD 10
+#define WINBLOCKREWARD 3
+
+
 int *TicTacToe::getBoard()
 {
     return board;
@@ -16,6 +22,8 @@ TicTacToe::TicTacToe()
     movesLeft = 9;
     turn = true;
     gameDone = 0;
+    P1Reward = 0;
+    P2Reward = 0;
 }
 
 void TicTacToe::displayBoard()
@@ -72,13 +80,13 @@ void TicTacToe::move(int pos)
     {
         if(turn)
         {
-            P1Reward += 20;
+            P1Reward += WINBLOCKREWARD;
             P2Reward += 0;
         }
         else
         {
             P1Reward += 0;
-            P2Reward += 20;
+            P2Reward += WINBLOCKREWARD;
         }
     }
     if(turn)
@@ -98,8 +106,8 @@ bool TicTacToe::isGameDone() {
     {
         if(!illegalMove)
         {
-            P1Reward = 5;
-            P2Reward = 5;
+            P1Reward = DRAWREWARD;
+            P2Reward = DRAWREWARD;
         }
         return true;
     }
@@ -119,13 +127,13 @@ bool TicTacToe::isGameDone() {
 
                 if(gameDone == 1)
                 {
-                    P1Reward += 10;
-                    P2Reward += -10;
+                    P1Reward += WINNINGREWARD;
+                    P2Reward += -WINNINGREWARD;
                 }
                 else
                 {
-                    P1Reward += -10;
-                    P2Reward += 10;
+                    P1Reward += -WINNINGREWARD;
+                    P2Reward += WINNINGREWARD;
                 }
                 return true;
             }
@@ -144,13 +152,13 @@ bool TicTacToe::isGameDone() {
 
                 if(gameDone == 1)
                 {
-                    P1Reward += 10;
-                    P2Reward += -10;
+                    P1Reward += WINNINGREWARD;
+                    P2Reward += -WINNINGREWARD;
                 }
                 else
                 {
-                    P1Reward += -10;
-                    P2Reward += 10;
+                    P1Reward += -WINNINGREWARD;
+                    P2Reward += WINNINGREWARD;
                 }
                 return true;
             }
@@ -161,13 +169,13 @@ bool TicTacToe::isGameDone() {
 
             if(gameDone == 1)
             {
-                P1Reward += 10;
-                P2Reward += -10;
+                P1Reward += WINNINGREWARD;
+                P2Reward += -WINNINGREWARD;
             }
             else
             {
-                P1Reward += -10;
-                P2Reward += 10;
+                P1Reward += -WINNINGREWARD;
+                P2Reward += WINNINGREWARD;
             }
             return true;
         }
@@ -177,10 +185,6 @@ bool TicTacToe::isGameDone() {
 
 bool TicTacToe::getTurn() {
     return turn;
-}
-
-int TicTacToe::getGameStatus() {
-    return gameDone;
 }
 
 int TicTacToe::getP1Reward() {
@@ -283,4 +287,15 @@ bool TicTacToe::isBlockingWin(int pos) {
     delete[] boardCustom;
 
     return returnVal;
+}
+
+int TicTacToe::getWinner() {
+    if(gameDone == 1)
+    {
+        return 'X';
+    }
+    else
+    {
+        return '0';
+    }
 }
