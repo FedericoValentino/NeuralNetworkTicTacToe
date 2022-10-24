@@ -81,6 +81,7 @@ void playGame(Individual* BestPlayer)
             int networkGuess;
 
             networkGuess = max(BestPlayer->CPU->feedForward(input), 9, currentGame);
+            BestPlayer->CPU->freeLayers();
 
             printf("Machine move is %d\n", networkGuess);
             currentGame->move(networkGuess);
@@ -114,10 +115,12 @@ void startGame(Individual* currentSubject, Individual* currentFoe)
         if(currentGame->getTurn())
         {
             guess = max(currentSubject->CPU->feedForward(input), 9, currentGame);
+            currentSubject->CPU->freeLayers();
         }
         else
         {
             guess = max(currentFoe->CPU->feedForward(input), 9, currentGame);
+            currentFoe->CPU->freeLayers();
         }
         //printf("move is %d\n", guess);
         currentGame->move(guess);
@@ -136,7 +139,7 @@ int main()
     for(int i = 0; i < TESTINDIVIDUALS; i++)
     {
         Individual* subject = new Individual;
-        subject->CPU = new BrainFart({9, 18, 18, 9});
+        subject->CPU = new BrainFart({9, 18, 9});
         subject->fitness = 0;
         testSubjects.push_back(subject);
     }
@@ -165,10 +168,12 @@ int main()
                     if(currentGame->getTurn())
                     {
                         guess = max(currentSubject->CPU->feedForward(input), 9, currentGame);
+                        currentSubject->CPU->freeLayers();
                     }
                     else
                     {
                         guess = max(currentFoe->CPU->feedForward(input), 9, currentGame);
+                        currentFoe->CPU->freeLayers();
                     }
                     currentGame->move(guess);
                 }
@@ -193,7 +198,10 @@ int main()
         std::vector<Individual*> newGeneration;
         newGeneration.clear();
 
-        for(int session = 0; session < TESTINDIVIDUALS; session++)
+        newGeneration.push_back(father);
+        newGeneration.push_back(mother);
+
+        for(int session = 2; session < TESTINDIVIDUALS; session++)
         {
             Individual* son = new Individual;
             son->CPU = BrainFart::reproduce(father->CPU, mother->CPU);
@@ -203,7 +211,7 @@ int main()
             newGeneration.push_back(son);
         }
 
-        for(int k = 0; k < TESTINDIVIDUALS; k++)
+        for(int k = 2; k < TESTINDIVIDUALS; k++)
         {
             testSubjects[k]->CPU->freeBrain();
             delete testSubjects[k]->CPU;
