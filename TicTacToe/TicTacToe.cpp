@@ -1,6 +1,6 @@
 #include "TicTacToe.h"
-#include <cstdlib>
 #include <cstdio>
+
 
 
 #define WINNINGREWARD 10
@@ -19,11 +19,8 @@ TicTacToe::TicTacToe()
     {
         board[i] = 0;
     }
-    movesLeft = 9;
     turn = true;
-    gameDone = 0;
-    P1Reward = 0;
-    P2Reward = 0;
+    currentMove = 0;
 }
 
 void TicTacToe::displayBoard()
@@ -60,35 +57,6 @@ void TicTacToe::displayBoard()
 
 void TicTacToe::move(int pos)
 {
-    if(board[pos] !=0)
-    {
-        illegalMove = true;
-        movesLeft = 0;
-        if(turn)
-        {
-            P1Reward += -20;
-            P2Reward += 0;
-        }
-        else
-        {
-            P1Reward += 0;
-            P2Reward += -20;
-        }
-        return;
-    }
-    if(isBlockingWin(pos))
-    {
-        if(turn)
-        {
-            P1Reward += WINBLOCKREWARD;
-            P2Reward += 0;
-        }
-        else
-        {
-            P1Reward += 0;
-            P2Reward += WINBLOCKREWARD;
-        }
-    }
     if(turn)
     {
         board[pos] = 1;
@@ -97,106 +65,31 @@ void TicTacToe::move(int pos)
     {
         board[pos] = -1;
     }
-    movesLeft--;
+
     turn= !turn;
 }
 
-bool TicTacToe::isGameDone() {
-    if(movesLeft == 0)
+void TicTacToe::move(int *board, int pos, bool turn)
+{
+    if(turn)
     {
-        if(!illegalMove)
-        {
-            P1Reward = DRAWREWARD;
-            P2Reward = DRAWREWARD;
-        }
-        return true;
+        board[pos] = 1;
     }
     else
     {
-        int total;
-        for(int row = 0; row < 3; row ++)
-        {
-            total = 0;
-            for(int cell = 0; cell < 3; cell++)
-            {
-                total += board[row * 3 + cell];
-            }
-            if(total == 3 || total == -3)
-            {
-                gameDone = (total / 3);
-
-                if(gameDone == 1)
-                {
-                    P1Reward += WINNINGREWARD;
-                    P2Reward += -WINNINGREWARD;
-                }
-                else
-                {
-                    P1Reward += -WINNINGREWARD;
-                    P2Reward += WINNINGREWARD;
-                }
-                return true;
-            }
-        }
-
-        for(int column = 0; column < 3; column ++)
-        {
-            total = 0;
-            for(int cell = 0; cell < 3; cell++)
-            {
-                total += board[cell*3 + column];
-            }
-            if(total == 3 || total == -3)
-            {
-                gameDone = (total / 3);
-
-                if(gameDone == 1)
-                {
-                    P1Reward += WINNINGREWARD;
-                    P2Reward += -WINNINGREWARD;
-                }
-                else
-                {
-                    P1Reward += -WINNINGREWARD;
-                    P2Reward += WINNINGREWARD;
-                }
-                return true;
-            }
-        }
-        if(((board[0] == board[4] && board[4] == board[8]) || (board[2] == board[4] && board[4] == board[6])) && board[4] != 0)
-        {
-            gameDone = (board[4]);
-
-            if(gameDone == 1)
-            {
-                P1Reward += WINNINGREWARD;
-                P2Reward += -WINNINGREWARD;
-            }
-            else
-            {
-                P1Reward += -WINNINGREWARD;
-                P2Reward += WINNINGREWARD;
-            }
-            return true;
-        }
+        board[pos] = -1;
     }
-    return false;
 }
 
-bool TicTacToe::getTurn() {
-    return turn;
-}
 
-int TicTacToe::getP1Reward() {
-    return P1Reward;
-}
-
-bool TicTacToe::isMoveAvailable(int pos) {
+bool TicTacToe::isMoveAvailable(int* board, int pos) {
     return board[pos] == 0;
 }
 
-bool TicTacToe::isGameDone(int *boardCustom) {
+int TicTacToe::isGameDone(int *boardCustom) {
     int total;
+    int gameDone = 0;
+
     for(int row = 0; row < 3; row ++)
     {
         total = 0;
@@ -208,17 +101,7 @@ bool TicTacToe::isGameDone(int *boardCustom) {
         {
             gameDone = (total / 3);
 
-            if(gameDone == 1)
-            {
-                P1Reward += 10;
-                P2Reward += -10;
-            }
-            else
-            {
-                P1Reward += -10;
-                P2Reward += 10;
-            }
-            return true;
+            return gameDone;
         }
     }
 
@@ -233,69 +116,114 @@ bool TicTacToe::isGameDone(int *boardCustom) {
         {
             gameDone = (total / 3);
 
-            if(gameDone == 1)
-            {
-                P1Reward += 10;
-                P2Reward += -10;
-            }
-            else
-            {
-                P1Reward += -10;
-                P2Reward += 10;
-            }
-            return true;
+            return gameDone;
         }
     }
     if(((boardCustom[0] == boardCustom[4] && boardCustom[4] == boardCustom[8]) || (boardCustom[2] == boardCustom[4] && boardCustom[4] == boardCustom[6])) && boardCustom[4] != 0)
     {
-        gameDone = (boardCustom[4]);
+        gameDone = boardCustom[4];
 
-        if(gameDone == 1)
-        {
-            P1Reward += 10;
-            P2Reward += -10;
-        }
-        else
-        {
-            P1Reward += -10;
-            P2Reward += 10;
-        }
-        return true;
+        return gameDone;
     }
 
-    return false;
-
-}
-
-bool TicTacToe::isBlockingWin(int pos) {
-    int * boardCustom = new int[9];
+    total = 0;
     for(int i = 0; i < 9; i++)
     {
-        boardCustom[i] = board[i];
+        if(boardCustom[i] != 0)
+        {
+            total++;
+        }
     }
-
-    if(turn)
+    if(total == 9)
     {
-        boardCustom[pos] = -1;
+        return 0;
     }
-    else
-    {
-        boardCustom[pos] = 1;
-    }
-    bool returnVal = isGameDone(boardCustom);
-
-    delete[] boardCustom;
-
-    return returnVal;
+    return -10;
 }
 
-int TicTacToe::getWinner() {
-    if(gameDone == 1)
+int TicTacToe::minimax(int *board, bool maxing)
+{
+    int gameWinner = isGameDone(board);
+    if(gameWinner != -10)
     {
-        return 'X';
+        return gameWinner;
+    }
+
+    if(maxing)
+    {
+        int value = -100;
+        for(int i = 0; i < 9; i++)
+        {
+            if(isMoveAvailable(board, i))
+            {
+                move(board, i, maxing);
+                int nextValue = minimax(board, false);
+                board[i] = 0;
+                if(nextValue > value)
+                {
+                    value = nextValue;
+                }
+            }
+        }
+        return value;
     }
     else
     {
-        return '0';
+        int value = 100;
+        for(int i = 0; i < 9; i++)
+        {
+            if(isMoveAvailable(board, i))
+            {
+                move(board, i, maxing);
+                int nextValue = minimax(board, true);
+                board[i] = 0;
+                if(nextValue < value)
+                {
+                    value = nextValue;
+                }
+            }
+        }
+        return value;
     }
+
+}
+
+int TicTacToe::aiMove()
+{
+    int bestScore;
+    if(turn)
+    {
+        bestScore = -100;
+    }
+    else
+    {
+        bestScore = 100;
+    }
+    int finalMove = 0;
+    for(int i = 0; i < 9; i++)
+    {
+        if(isMoveAvailable(this->board, i))
+        {
+            move(this->board, i, turn);
+            int score = minimax(this->board, !turn);
+            this->board[i] = 0;
+            if(turn)
+            {
+                if(score > bestScore)
+                {
+                    bestScore = score;
+                    finalMove = i;
+                }
+            }
+            else
+            {
+                if(score < bestScore)
+                {
+                    bestScore = score;
+                    finalMove = i;
+                }
+            }
+        }
+    }
+    return finalMove;
 }

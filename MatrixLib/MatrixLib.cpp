@@ -1,5 +1,3 @@
-#include<cstdio>
-#include <vector>
 #include "MatrixLib.h"
 
 void MatrixMath::print(float** matrix, int r, int c)
@@ -42,6 +40,7 @@ float** MatrixMath::multiply(int r1, int c1, int r2, int c2, float** m1, float**
             multiplication[r][c] = 0;
             for(int k = 0; k < c1; k++)
             {
+                //printf("%f, %f\n", m1[r][k], m2[k][c]);
                 multiplication[r][c] += m1[r][k] * m2[k][c];
             }
         }
@@ -49,30 +48,28 @@ float** MatrixMath::multiply(int r1, int c1, int r2, int c2, float** m1, float**
     return multiplication;
 }
 
-void MatrixMath::transpose(float** m1, int r, int c)
+float** MatrixMath::transpose(float** m1, int r, int c)
 {
-    float temp[r][c];
-
-    for(int i = 0; i < r; i++)
+    float** transpose = new float*[c];
+    for(int i = 0; i < c; i++)
     {
-        for(int j = 0; j < c; j++)
+        transpose[i] = new float[r];
+    }
+
+    for(int i = 0; i < c; i++)
+    {
+        for(int j = 0; j < r; j++)
         {
-            temp[r][c] = m1[r][c];
+            transpose[i][j] = m1[j][i];
         }
     }
 
-    for(int i = 0; i < r; i++)
-    {
-        for(int j = 0; j < c; j++)
-        {
-            m1[r][c] = temp[c][r];
-        }
-    }
+    return transpose;
 }
 
 float **MatrixMath::subtract(int r1, int c1, float **m1, float **m2) {
     float** returnMatrix = new float*[r1];
-    for(int i = 0; i < c1; i++)
+    for(int i = 0; i < r1; i++)
     {
         returnMatrix[i] = new float[c1];
     }
@@ -95,14 +92,111 @@ float **MatrixMath::toMatrix(int r, int c, std::vector<float> input) {
         toMatrix[i] = new float[c];
     }
 
+    for(int i = 0; i < input.size(); i++)
+    {
+        toMatrix[i/c][i%c] = input[i];
+    }
+
+    return toMatrix;
+}
+
+void MatrixMath::Hadamard(int r, int c, float **m1, float **m2)
+{
     for(int i = 0; i < r; i++)
     {
         for(int j = 0; j < c; j++)
         {
-            toMatrix[i][j] = input[i*r + j];
+            m1[i][j] = m1[i][j] * m2[i][j] * 0.5;
+        }
+    }
+}
+
+void MatrixMath::sum(int r, int c, float **m1, float **m2)
+{
+    for(int i = 0; i < r; i++)
+    {
+        for(int j = 0; j < c; j++)
+        {
+            m1[i][j] = m1[i][j] + m2[i][j];
+        }
+    }
+}
+
+void MatrixMath::freeMatrix(int r, int c, float **m1)
+{
+    for(int i = 0; i < r; i++)
+    {
+        delete m1[i];
+    }
+    delete m1;
+}
+
+float **MatrixMath::dsigmoid(int r, int c, float **m1)
+{
+
+    float** dsig = new float*[r];
+    for(int i = 0; i < r; i++)
+    {
+        dsig[i] = new float[c];
+    }
+
+    for(int i = 0; i < r; i++)
+    {
+        for(int j = 0; j < c; j++)
+        {
+            dsig[i][j] = m1[i][j] * (1 - m1[i][j]);
         }
     }
 
-    return toMatrix;
+    return dsig;
+}
+
+float **MatrixMath::copyMatrix(int r, int c, float **from)
+{
+
+    float** copy = new float*[r];
+    for(int i = 0; i < r; i++)
+    {
+        copy[i] = new float[c];
+    }
+
+    for(int i = 0; i < r; i++)
+    {
+        for(int j = 0; j < c; j++)
+        {
+            copy[i][j] = from[i][j];
+        }
+    }
+
+    return copy;
+}
+
+float **MatrixMath::unitaryMatrix(int r, int c) {
+    float** copy = new float*[r];
+    for(int i = 0; i < r; i++)
+    {
+        copy[i] = new float[c];
+    }
+
+    for(int i = 0; i < r; i++)
+    {
+        for(int j = 0; j < c; j++)
+        {
+            copy[i][j] = 1;
+        }
+    }
+
+    return copy;
+}
+
+void MatrixMath::scalarMultiply(int r, int c, float scalar, float **m1) {
+
+    for(int i = 0; i < r; i++)
+    {
+        for(int j = 0; j < c; j++)
+        {
+            m1[i][j] = m1[i][j] * scalar;
+        }
+    }
 }
 

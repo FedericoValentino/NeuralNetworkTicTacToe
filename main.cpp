@@ -1,248 +1,196 @@
-#include <cstdio>
-#include <vector>
-#include <iterator>
-#include <algorithm>
+#include <stdio.h>
+#include<stdlib.h>
+#include<time.h>
 #include "TicTacToe/TicTacToe.h"
 #include "BrainLib/BrainFart.h"
 
-#define GENERATIONS 500
-
-#define TESTINDIVIDUALS 100
-
-
-struct individual
+void minimaxTest()
 {
-    BrainFart* CPU;
-    int fitness;
-};
+    TicTacToe* game = new TicTacToe();
 
-typedef struct individual Individual;
-
-bool comp(Individual* i1, Individual* i2)
-{
-    return i1->fitness > i2->fitness;
-}
-
-int max(const float* array, int size, TicTacToe* game)
-{
-    float max = 0;
-    int returnValue = 0;
-    for(int i = 0; i < size; i++)
+    while(TicTacToe::isGameDone(game->board) == -10)
     {
-        if(array[i] > max)
+        if(game->turn)
         {
-            if(game->isMoveAvailable(i))
-            {
-                max = array[i];
-                returnValue = i;
-            }
-        }
-    }
-
-    delete array;
-    return returnValue;
-}
-
-void testTicTacToe()
-{
-    TicTacToe* currentGame = new TicTacToe();
-
-    currentGame->displayBoard();
-
-    while(!currentGame->isGameDone())
-    {
-
-        printf("Play your move\n");
-        int playerMove = 0;
-        scanf("%d", &playerMove);
-
-        currentGame->move(playerMove);
-
-        currentGame->displayBoard();
-    }
-    delete currentGame;
-}
-
-
-void playGame(Individual* BestPlayer)
-{
-    TicTacToe* currentGame = new TicTacToe();
-
-    while(!currentGame->isGameDone())
-    {
-        currentGame->displayBoard();
-        if(currentGame->getTurn())
-        {
-            std::vector<float> input;
-            for(int k = 0; k < 9; k++)
-            {
-                input.push_back((float)currentGame->getBoard()[k]);
-            }
-            int networkGuess;
-
-            networkGuess = max(BestPlayer->CPU->feedForward(input), 9, currentGame);
-            BestPlayer->CPU->freeLayers();
-
-            printf("Machine move is %d\n", networkGuess);
-            currentGame->move(networkGuess);
+            int move;
+            printf("Your Move: \n");
+            scanf("%d", &move);
+            game->move(move);
         }
         else
         {
-            printf("Play your move\n");
-            int playerMove = 0;
-            scanf("%d", &playerMove);
-
-            currentGame->move(playerMove);
+            printf("Minimax Move:\n");
+            game->move(game->aiMove());
         }
+        game->displayBoard();
     }
-    printf("Winner is %c", currentGame->getWinner());
-
-    delete currentGame;
 }
 
-void startGame(Individual* currentSubject, Individual* currentFoe)
-{
-    TicTacToe* currentGame = new TicTacToe();
 
-    while(!currentGame->isGameDone())
+std::vector<float> BoardToVec(int* arr, int size)
+{
+    std::vector<float> vec(size);
+    for(int i = 0; i < 3; i++)
     {
-        std::vector<float> input;
-        for(int k = 0; k < 9; k++)
+        for(int j = 0; j < 9; j++)
         {
-            input.push_back((float)currentGame->getBoard()[k]);
+            switch(i)
+            {
+                case 0:
+                    if(arr[j] == 1)
+                    {
+                        vec[i*9+j] = 1;
+                    }
+                    else
+                    {
+                        vec[i*9+j] = 0;
+                    }
+                    break;
+                case 1:
+                    if(arr[j] == -1)
+                    {
+                        vec[i*9+j] = 1;
+                    }
+                    else
+                    {
+                        vec[i*9+j] = 0;
+                    }
+                    break;
+                case 2:
+                    if(arr[j] == 0)
+                    {
+                        vec[i*9+j] = 1;
+                    }
+                    else
+                    {
+                        vec[i*9+j] = 0;
+                    }
+                    break;
+            }
+
         }
-        int guess;
-        if(currentGame->getTurn())
-        {
-            guess = max(currentSubject->CPU->feedForward(input), 9, currentGame);
-            currentSubject->CPU->freeLayers();
-        }
-        else
-        {
-            guess = max(currentFoe->CPU->feedForward(input), 9, currentGame);
-            currentFoe->CPU->freeLayers();
-        }
-        //printf("move is %d\n", guess);
-        currentGame->move(guess);
-        currentGame->displayBoard();
     }
-    delete currentGame;
+
+    return vec;
+}
+
+std::vector<float> moveVect(int pos, int size)
+{
+    std::vector<float> moveVect(size);
+    for(int i = 0; i < 9; i++)
+    {
+        moveVect[i] = 0;
+    }
+    moveVect[pos] = 1;
+
+    return moveVect;
+}
+
+int getMove(TicTacToe* game, std::vector<float> guess)
+{
+    float bestScore = -1;
+    int bestMove = 0;
+    for(int i = 0; i < 9; i++)
+    {
+        if(guess[i] > bestScore)
+        {
+            if(TicTacToe::isMoveAvailable(game->board, i))
+            {
+                bestScore = guess[i];
+                bestMove = i;
+            }
+        }
+    }
+    return bestMove;
 }
 
 int main()
 {
-    //testTicTacToe();
+    srand(time(NULL));
+    BrainFart* TicTacToePlayer = new BrainFart({27, 18, 18, 9}, 0.07);
 
-    printf("TicTacToe\n");
-    std::vector<Individual*> testSubjects;
-
-    for(int i = 0; i < TESTINDIVIDUALS; i++)
+    for(int i = 0; i < 1000; i++)
     {
-        Individual* subject = new Individual;
-        subject->CPU = new BrainFart({9, 18, 9});
-        subject->fitness = 0;
-        testSubjects.push_back(subject);
-    }
-
-    printf("Training...\n");
-    for(int generation = 0; generation < GENERATIONS; generation++)
-    {
-        for(int j = 0; j < TESTINDIVIDUALS; j++)
+        printf("Training n %d\n", i);
+        TicTacToe* game = new TicTacToe();
+        int moves = rand()%5 + 3;
+        for(int j = 0; j < moves; j++)
         {
-            Individual* currentSubject = testSubjects[j];
-            currentSubject->fitness = 0;
-            for(int foe = 0; foe < TESTINDIVIDUALS; foe++)
+            int moveRandomizer = rand() % 11;
+            if(moveRandomizer < 3)
             {
-                Individual* currentFoe = testSubjects[foe];
-
-                TicTacToe* currentGame = new TicTacToe();
-
-                while(!currentGame->isGameDone())
+                game->move(game->aiMove());
+            }
+            else
+            {
+                int randomMove;
+                do
                 {
-                    std::vector<float> input;
-                    for(int l = 0; l < 9; l++)
-                    {
-                        input.push_back((float)currentGame->getBoard()[l]);
-                    }
-                    int guess;
-                    if(currentGame->getTurn())
-                    {
-                        guess = max(currentSubject->CPU->feedForward(input), 9, currentGame);
-                        currentSubject->CPU->freeLayers();
-                    }
-                    else
-                    {
-                        guess = max(currentFoe->CPU->feedForward(input), 9, currentGame);
-                        currentFoe->CPU->freeLayers();
-                    }
-                    currentGame->move(guess);
-                }
-
-                currentSubject->fitness += currentGame->getP1Reward();
-                //printf("Fitness gain is %d\n", currentGame->getP1Reward());
-                delete currentGame;
+                    randomMove = rand()%9;
+                }while(!TicTacToe::isMoveAvailable(game->board, randomMove));
+                game->move(randomMove);
             }
         }
 
-        std::sort(testSubjects.begin(), testSubjects.end(), comp);
+        TrainingStruct training;
 
-        printf("The best individual in generation %d had fitness: %d\n", generation, testSubjects[0]->fitness);
+        training.Data = BoardToVec(game->board, 27);
 
-        Individual* father = testSubjects[0];
-        Individual* mother = testSubjects[1];
+        training.answer = moveVect(game->aiMove(), 9);
 
-
-        //startGame(father, mother);
-
-
-        std::vector<Individual*> newGeneration;
-        newGeneration.clear();
-
-        newGeneration.push_back(father);
-        newGeneration.push_back(mother);
-
-        for(int session = 2; session < TESTINDIVIDUALS; session++)
+        if(TicTacToe::isGameDone(game->board) == -10)
         {
-            Individual* son = new Individual;
-            son->CPU = BrainFart::reproduce(father->CPU, mother->CPU);
-            //son->CPU = BrainFart::cloneBrain(father->CPU);
-            son->fitness = 0;
-            son->CPU->mutate();
-            newGeneration.push_back(son);
+            TicTacToePlayer->train(training);
+        }
+        else
+        {
+            i--;
         }
 
-        for(int k = 2; k < TESTINDIVIDUALS; k++)
+
+        delete game;
+    }
+
+    TicTacToe* finalTestMinimax = new TicTacToe();
+
+    while(TicTacToe::isGameDone(finalTestMinimax->board) == -10)
+    {
+        if(finalTestMinimax->turn)
         {
-            testSubjects[k]->CPU->freeBrain();
-            delete testSubjects[k]->CPU;
-            delete testSubjects[k];
+            printf("Network Move:\n");
+            std::vector<float> answer = TicTacToePlayer->feedForward(BoardToVec(finalTestMinimax->board, 27));
+            int move = getMove(finalTestMinimax, answer);
+            finalTestMinimax->move(move);
         }
+        else
+        {
+            printf("Minimax Move:\n");
+            finalTestMinimax->move(finalTestMinimax->aiMove());
+        }
+        finalTestMinimax->displayBoard();
+    }
 
-        testSubjects.clear();
+    TicTacToe* finalTestReal = new TicTacToe();
 
-        testSubjects = newGeneration;
-
+    while(TicTacToe::isGameDone(finalTestReal->board) == -10)
+    {
+        if(finalTestReal->turn)
+        {
+            printf("Network Move:\n");
+            std::vector<float> answer = TicTacToePlayer->feedForward(BoardToVec(finalTestReal->board, 27));
+            int move = getMove(finalTestReal, answer);
+            finalTestReal->move(move);
+        }
+        else
+        {
+            printf("Your Move:\n");
+            int move;
+            scanf("%d", &move);
+            finalTestReal->move(move);
+        }
+        finalTestReal->displayBoard();
     }
 
 
-    printf("Ready to play!\n");
-
-    int answer = 0;
-    do
-    {
-        playGame(testSubjects[0]);
-
-        printf("Wanna play again?\n");
-        scanf("%d", &answer);
-    }while(answer > 0);
-
-
-
-    for(int i = 0; i < TESTINDIVIDUALS; i++)
-    {
-        testSubjects[i]->CPU->freeBrain();
-        delete testSubjects[i]->CPU;
-        delete testSubjects[i];
-    }
 
 }
